@@ -17,6 +17,7 @@ import CodeWalkthrough from "@/components/CodeWalkthrough";
 import TerminalShowcase from "@/components/TerminalShowcase";
 import AnimatedDiagram from "@/components/AnimatedDiagram";
 import FrameworkSection from "@/components/FrameworkSection";
+import HomePlayground from "@/components/HomePlayground";
 
 export default function LandingPage() {
   const fadeInUp = {
@@ -65,7 +66,7 @@ export default function LandingPage() {
               Compare
             </Link>
             <Link
-              href="/playground"
+              href="#playground"
               className="text-blue-600 font-semibold hover:text-blue-700 transition-colors flex items-center gap-1.5"
             >
               <Zap className="w-4 h-4" /> Playground
@@ -158,7 +159,7 @@ export default function LandingPage() {
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
           <Link
-            href="/playground"
+            href="#playground"
             className="flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-100 px-6 py-3.5 rounded-xl font-medium text-base hover:bg-blue-100 transition-all w-full sm:w-auto justify-center shadow-sm"
           >
             <Zap className="w-4 h-4 animate-pulse" />
@@ -243,6 +244,8 @@ export default function LandingPage() {
           </div>
         </motion.div>
       </section>
+
+      <HomePlayground />
 
       {/* ── INTERACTIVE CODE SECTION ── */}
       <section className="py-24 px-6 bg-white border-b border-gray-100">
