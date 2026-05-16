@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { EventEmitter } from "zerithdb-core";
+import { EventEmitter } from "../../packages/core/src/index.js";
 
 describe("EventEmitter", () => {
   it("should emit events to listeners", () => {
