@@ -140,14 +140,15 @@ export default function LandingPage() {
           <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-blue-50/30 rounded-full blur-[80px]" />
 
           {/* Structured Decorative Elements - Moved closer for framing */}
-          {/* Left Circle - Improved: gradient, closer to heading */}
+          {/* Left Square - Improved: gradient, closer to heading, rounded-square shape */}
           <motion.div
             animate={{
               y: [0, -12, 0],
               scale: [1, 1.05, 1],
+              rotate: [0, 8, 0],
             }}
             transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[15%] left-[10%] w-24 h-24 bg-gradient-to-br from-blue-400/20 via-blue-200/5 to-transparent border border-blue-200/30 rounded-full blur-[0.5px] backdrop-blur-[4px] hidden xl:block"
+            className="absolute top-[15%] left-[10%] w-24 h-24 bg-gradient-to-br from-blue-400/20 via-blue-200/5 to-transparent border border-blue-200/30 rounded-[2rem] blur-[0.5px] backdrop-blur-[4px] hidden xl:block"
           />
 
           {/* Right Tilted Square - Improved: glass effect, closer to CTA */}
@@ -652,9 +653,10 @@ export default function LandingPage() {
             animate={{
               y: [0, -10, 0],
               scale: [1, 1.1, 1],
+              rotate: [0, -10, 0],
             }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-20 left-[18%] w-24 h-24 bg-gradient-to-tr from-blue-500/10 to-indigo-500/5 border border-blue-200/20 rounded-full blur-[0.5px] backdrop-blur-sm hidden md:block"
+            className="absolute top-20 left-[18%] w-24 h-24 bg-gradient-to-tr from-blue-500/10 to-indigo-500/5 border border-blue-200/20 rounded-[1.5rem] blur-[0.5px] backdrop-blur-sm hidden md:block"
           />
           <motion.div
             animate={{
