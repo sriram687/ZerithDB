@@ -106,9 +106,18 @@ export default function LandingPage() {
       </header>
 
       {/* ── 1. HERO SECTION ── */}
-      <section className="relative pt-32 pb-20 px-6 max-w-6xl mx-auto text-center">
+      <section className="relative pt-32 pb-20 px-6 max-w-7xl mx-auto text-center">
         {/* Background Decorations */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none overflow-visible">
+          {/* Subtle Dot Grid Pattern */}
+          <div 
+            className="absolute inset-0 opacity-[0.15]" 
+            style={{ 
+              backgroundImage: `radial-gradient(#cbd5e1 1px, transparent 1px)`, 
+              backgroundSize: '24px 24px' 
+            }} 
+          />
+          
           {/* Blurred Background Glows */}
           <motion.div
             animate={{
@@ -116,7 +125,7 @@ export default function LandingPage() {
               opacity: [0.3, 0.4, 0.3],
             }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-20 -left-20 w-64 h-64 bg-blue-100 rounded-full blur-3xl"
+            className="absolute top-10 left-1/4 w-[500px] h-[500px] bg-blue-100/50 rounded-full blur-[100px]"
           />
           <motion.div
             animate={{
@@ -124,28 +133,31 @@ export default function LandingPage() {
               opacity: [0.2, 0.3, 0.2],
             }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute top-40 -right-20 w-80 h-80 bg-indigo-100 rounded-full blur-3xl"
+            className="absolute top-20 right-1/4 w-[600px] h-[600px] bg-indigo-100/40 rounded-full blur-[120px]"
           />
 
-          {/* Structured Decorative Elements */}
-          {/* Left Circle - Improved: smaller, closer, gradient, blurred */}
+          {/* Central Glow behind text */}
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-blue-50/30 rounded-full blur-[80px]" />
+
+          {/* Structured Decorative Elements - Moved closer for framing */}
+          {/* Left Circle - Improved: gradient, closer to heading */}
           <motion.div
             animate={{
-              y: [0, -15, 0],
-              rotate: [0, 10, 0],
+              y: [0, -12, 0],
+              scale: [1, 1.05, 1],
             }}
             transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/4 -left-12 w-20 h-20 bg-gradient-to-br from-blue-400/10 to-transparent border border-blue-200/20 rounded-full blur-[1px] backdrop-blur-sm hidden lg:block"
+            className="absolute top-[15%] left-[10%] w-24 h-24 bg-gradient-to-br from-blue-400/20 via-blue-200/5 to-transparent border border-blue-200/30 rounded-full blur-[0.5px] backdrop-blur-[4px] hidden xl:block"
           />
 
-          {/* Right Tilted Square - Improved: softer border, glass effect, subtle rotation */}
+          {/* Right Tilted Square - Improved: glass effect, closer to CTA */}
           <motion.div
             animate={{
-              y: [0, 15, 0],
-              rotate: [-12, -8, -12],
+              y: [0, 12, 0],
+              rotate: [-12, -6, -12],
             }}
             transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            className="absolute top-1/3 -right-16 w-32 h-32 bg-white/5 border border-indigo-200/30 rounded-2xl backdrop-blur-[2px] -rotate-12 hidden lg:block shadow-sm"
+            className="absolute top-[40%] right-[8%] w-40 h-40 bg-white/10 border border-indigo-200/40 rounded-[2.5rem] backdrop-blur-[6px] -rotate-12 hidden xl:block shadow-[0_8px_32px_rgba(99,102,241,0.08)]"
           />
         </div>
 
@@ -633,13 +645,16 @@ export default function LandingPage() {
       >
         {/* Abstract shapes for CTA */}
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+          {/* Subtle Background Glow for CTA */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-50/50 rounded-full blur-[100px] -z-10" />
+
           <motion.div
             animate={{
               y: [0, -10, 0],
-              rotate: [45, 55, 45],
+              scale: [1, 1.1, 1],
             }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-20 left-[15%] w-24 h-24 bg-gradient-to-tr from-blue-500/5 to-indigo-500/10 border border-blue-200/20 rounded-full blur-[1px] backdrop-blur-sm hidden md:block"
+            className="absolute top-20 left-[18%] w-24 h-24 bg-gradient-to-tr from-blue-500/10 to-indigo-500/5 border border-blue-200/20 rounded-full blur-[0.5px] backdrop-blur-sm hidden md:block"
           />
           <motion.div
             animate={{
@@ -647,7 +662,7 @@ export default function LandingPage() {
               rotate: [-12, -18, -12],
             }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute bottom-20 right-[15%] w-40 h-40 bg-white/5 border border-gray-200/30 rounded-3xl backdrop-blur-[2px] -rotate-12 hidden md:block shadow-sm"
+            className="absolute bottom-20 right-[18%] w-44 h-44 bg-white/5 border border-gray-200/40 rounded-[3rem] backdrop-blur-[4px] -rotate-12 hidden md:block shadow-[0_8px_32px_rgba(0,0,0,0.04)]"
           />
         </div>
 
