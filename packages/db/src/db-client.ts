@@ -10,7 +10,8 @@ import type {
 import { ZerithDBError, ErrorCode } from "zerithdb-core";
 import { wrapIDBOperation } from "./internal/wrap-idb-operation.js";
 import type { BackupExportOptions, BackupSnapshot } from "./backup.js";
-
+import { GraphClient } from "./graph-client.js";
+import type { GraphNode, GraphEdge } from "zerithdb-core";
 /**
  * A handle to a single named collection within the ZerithDB local database.
  * All operations are async and backed by IndexedDB.
@@ -322,6 +323,8 @@ class ZerithDBDexie extends Dexie {
     super(`zerithdb_${appId}`);
   }
 
+
+
   /**
    * Ensure a named collection exists, creating it via a Dexie version
    * upgrade if it has not been registered yet.
@@ -347,6 +350,32 @@ class ZerithDBDexie extends Dexie {
     // biome-ignore lint: map guarantees this is defined
     return this.tableMap.get(name)!;
   }
+
+  ensureGraphTables(graphName: string): { nodesTable: Table; edgesTable: Table } {
+  const nodesKey = `__graph_nodes_${graphName}`;
+  const edgesKey = `__graph_edges_${graphName}`;
+
+  if (!this.tableMap.has(nodesKey) || !this.tableMap.has(edgesKey)) {
+    this._currentSchema[nodesKey] = "_id, _createdAt, _updatedAt";
+    this._currentSchema[edgesKey] = "_id, from, to, label, _createdAt";
+
+    const nextVersion = Math.max(this.verno, this._pendingVersion) + 1;
+    this._pendingVersion = nextVersion;
+
+    if (this.isOpen()) {
+      this.close();
+    }
+
+    this.version(nextVersion).stores(this._currentSchema);
+    this.tableMap.set(nodesKey, this.table(nodesKey));
+    this.tableMap.set(edgesKey, this.table(edgesKey));
+  }
+
+  return {
+    nodesTable: this.tableMap.get(nodesKey)!,
+    edgesTable: this.tableMap.get(edgesKey)!,
+  };
+}
 }
 
 /**
@@ -358,6 +387,8 @@ export class DbClient {
   private readonly appId: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private readonly collections = new Map<string, CollectionClient<any>>();
+
+  private readonly graphs = new Map<string, GraphClient<any>>();
 
   constructor(config: ZerithDBConfig) {
     this.appId = config.appId;
@@ -377,6 +408,21 @@ export class DbClient {
     }
     return this.collections.get(name) as CollectionClient<T>;
   }
+
+  graph<T extends Record<string, any> = Record<string, any>>(name: string): GraphClient<T> {
+  if (!this.graphs.has(name)) {
+    const { nodesTable, edgesTable } = this.dexie.ensureGraphTables(name);
+    this.graphs.set(
+      name,
+      new GraphClient<T>(
+        nodesTable as Table<GraphNode<T>>,
+        edgesTable as Table<GraphEdge>,
+        name
+      )
+    );
+  }
+  return this.graphs.get(name) as GraphClient<T>;
+}
 
   async getMemoryStats(): Promise<{ recordCount: number; collections: Record<string, number> }> {
     const collections: Record<string, number> = {};
