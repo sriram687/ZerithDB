@@ -28,7 +28,7 @@ jobs:
         run: |
           PR_NUM="${{ github.event.issue.number || github.event.pull_request.number }}"
           curl -s \
-            -H "Authorization: Bearer ${{ secrets.PAT_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3.diff" \
             "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUM}" \
             > pr.diff
@@ -188,7 +188,7 @@ jobs:
               print("✅ Labels applied successfully")
           PYEOF
         env:
-          GH_TOKEN:            ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN:            ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           PR_NUMBER:           ${{ github.event.issue.number || github.event.pull_request.number }}
           GITHUB_REPOSITORY:   ${{ github.repository }}
 
@@ -260,7 +260,7 @@ jobs:
               print("✅ Review comment posted", flush=True)
           PYEOF
         env:
-          GH_TOKEN:            ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN:            ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           PR_NUMBER:           ${{ github.event.issue.number || github.event.pull_request.number }}
           GITHUB_REPOSITORY:   ${{ github.repository }}
 
@@ -296,7 +296,7 @@ jobs:
               print(f"✅ Formal review submitted: {verdict}", flush=True)
           PYEOF
         env:
-          GH_TOKEN:          ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN:          ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           PR_NUMBER:         ${{ github.event.issue.number || github.event.pull_request.number }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         continue-on-error: true
