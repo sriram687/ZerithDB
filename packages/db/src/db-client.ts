@@ -9,6 +9,7 @@ import type {
 } from "zerithdb-core";
 import { ZerithDBError, ErrorCode } from "zerithdb-core";
 import { wrapIDBOperation } from "./internal/wrap-idb-operation.js";
+import { EventEmitter } from "zerithdb-core";
 import type { BackupExportOptions, BackupSnapshot } from "./backup.js";
 import { GraphClient } from "./graph-client.js";
 import type { GraphNode, GraphEdge } from "zerithdb-core";
@@ -19,7 +20,8 @@ import type { GraphNode, GraphEdge } from "zerithdb-core";
 export class CollectionClient<T extends Record<string, any> = Record<string, any>> {
   constructor(
     private readonly table: Table<Document<T>>,
-    private readonly collectionName: string
+    private readonly collectionName: string,
+    private readonly notifyMutation?: () => void
   ) {}
 
   /**
@@ -60,6 +62,7 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
       `Failed to insert into collection "${this.collectionName}"`,
       async () => {
         await this.table.add(doc);
+        this.notifyMutation?.();
         return { id };
       }
     );
@@ -93,6 +96,7 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
       `Failed to bulk insert into collection "${this.collectionName}"`,
       async () => {
         await this.table.bulkAdd(docs);
+        this.notifyMutation?.();
         return docs.map((d) => ({ id: d._id }));
       }
     );
@@ -154,6 +158,7 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
         const matches = await this.find(filter);
         const now = Date.now();
         await this.table.bulkPut(matches.map((doc) => this.applyUpdateSpec(doc, spec, now)));
+        this.notifyMutation?.();
         return matches.length;
       }
     );
@@ -170,6 +175,7 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
       async () => {
         const matches = await this.find(filter);
         await this.table.bulkDelete(matches.map((d) => d._id));
+        this.notifyMutation?.();
         return matches.length;
       }
     );
@@ -182,7 +188,10 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
     return wrapIDBOperation(
       ErrorCode.DB_DELETE_FAILED,
       `Failed to clear collection "${this.collectionName}"`,
-      () => this.table.clear()
+      async () => {
+        await this.table.clear();
+        this.notifyMutation?.();
+      }
     );
   }
 
@@ -382,7 +391,7 @@ class ZerithDBDexie extends Dexie {
  * Internal database client. Wraps Dexie and manages collection instances.
  * Use via {@link ZerithDBApp.db} — not instantiated directly.
  */
-export class DbClient {
+export class DbClient extends EventEmitter<{ "mutation": { collection: string } }> {
   private readonly dexie: ZerithDBDexie;
   private readonly appId: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -391,6 +400,7 @@ export class DbClient {
   private readonly graphs = new Map<string, GraphClient<any>>();
 
   constructor(config: ZerithDBConfig) {
+    super();
     this.appId = config.appId;
     this.dexie = new ZerithDBDexie(config.appId);
   }
@@ -404,7 +414,13 @@ export class DbClient {
     }
     if (!this.collections.has(name)) {
       const table = this.dexie.ensureCollection(name);
-      this.collections.set(name, new CollectionClient<T>(table as Table<Document<T>>, name));
+      this.collections.set(name, new CollectionClient<T>(
+        table as Table<Document<T>>, 
+        name,
+        () => {
+          this.emit("mutation", { collection: name });
+        }
+      ));
     }
     return this.collections.get(name) as CollectionClient<T>;
   }

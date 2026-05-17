@@ -1,3 +1,4 @@
+"use client";
 import { useEffect, useState } from "react";
 import { useZerith } from "./useZerith";
 
@@ -18,7 +19,12 @@ export function useSync() {
 
   return {
     state,
-    enable: () => app.sync.enable(),
+    enable: async (roomId?: string) => {
+      app.sync.enable();
+      if (roomId) {
+        await app.network.connect(roomId);
+      }
+    },
     disable: () => app.sync.disable(),
   };
 }
