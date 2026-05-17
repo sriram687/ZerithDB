@@ -28,6 +28,7 @@ export interface ZerithDBApp {
    * ```
    */
   db<T extends Record<string, any> = Record<string, any>>(name: string): CollectionClient<T>;
+  dbClient: DbClient;
 
   /** CRDT sync engine — manages Yjs documents and P2P update propagation */
   sync: SyncEngine;
@@ -158,6 +159,8 @@ export function createApp(config: ZerithDBConfig): ZerithDBApp {
       // no need for a second cache layer here.
       return db.collection<T>(name);
     },
+
+    dbClient: db,
 
     sync,
     auth,

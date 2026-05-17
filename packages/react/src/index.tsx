@@ -1,3 +1,4 @@
+"use client";
 export { ZerithContext, ZerithProvider } from "./context";
 export type { ZerithProviderProps } from "./context";
 export { useZerith } from "./useZerith";
