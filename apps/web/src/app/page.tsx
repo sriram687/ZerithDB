@@ -827,12 +827,16 @@ export default function LandingPage() {
             >
               Pricing
             </Link>
+            <a href="#"
+              className="hover:text-gray-900 transition-colors">
+
             <a
               href="https://discord.gg/MhvuDvzWfF"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-foreground transition-colors"
             >
+
               Discord
             </a>
           </div>
