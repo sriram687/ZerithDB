@@ -18,16 +18,16 @@ export type Document<T extends Record<string, any> = Record<string, any>> = T & 
  * Nested object fields are matched by equality.
  */
 export type QueryFilter<T extends Record<string, any>> = {
-  [K in keyof T]?:
-    | T[K]
-    | { $eq: T[K] }
-    | { $ne: T[K] }
-    | { $gt: T[K] }
-    | { $gte: T[K] }
-    | { $lt: T[K] }
-    | { $lte: T[K] }
-    | { $in: T[K][] }
-    | { $nin: T[K][] }
+  [K in keyof (T & Document)]?:
+    | (T & Document)[K]
+    | { $eq: (T & Document)[K] }
+    | { $ne: (T & Document)[K] }
+    | { $gt: (T & Document)[K] }
+    | { $gte: (T & Document)[K] }
+    | { $lt: (T & Document)[K] }
+    | { $lte: (T & Document)[K] }
+    | { $in: (T & Document)[K][] }
+    | { $nin: (T & Document)[K][] }
     | { $regex: RegExp | string };
 };
 
