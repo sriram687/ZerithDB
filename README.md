@@ -62,7 +62,7 @@ your users' browsers form a resilient, encrypted mesh network.
 
 - **No backend to manage.** No servers, no databases, no DevOps.
 - **Works offline.** All data lives locally first, syncs opportunistically.
-- **Conflict-free by design.** CRDT-based sync means merges just work.
+- **Conflict-free by design.** CRDT-based sync means merges work seamlessly.
 - **Private by default.** Public/private key identity — no passwords, no auth servers.
 
 > ZerithDB is in **alpha**. APIs will change. Feedback is our oxygen —
@@ -113,14 +113,14 @@ That's it. No `.env` files. No `docker-compose.yml`. No cloud accounts.
 
 ## Features
 
-| Feature                | Description                                                                                           |
-| ---------------------- | ----------------------------------------------------------------------------------------------------- |
-| 🗄️ **Local Database**  | IndexedDB-backed via Dexie. MongoDB-style query API. Reactive live queries.                           |
-| 🔄 **CRDT Sync**       | Yjs-powered conflict-free sync. Merge without servers. Works across browser tabs, devices, and peers. |
-| 🕸️ **P2P Network**     | WebRTC mesh via `simple-peer`. Minimal signaling server (only for initial handshake).                 |
-| 🔐 **Keychain Auth**   | Ed25519 keypair identity. Sign-in is `generateKey()`. No email, no OAuth, no passwords.               |
-| 📦 **Modular SDK**     | Tree-shakeable. Use only what you need. Works with React, Vue, Svelte, or vanilla JS.                 |
-| ⚡ **Zero Config CLI** | `npx zerithdb init` bootstraps a full project in seconds.                                             |
+| Feature                | Description                                                                                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 🗄️ **Local Database**  | IndexedDB-backed via Dexie. MongoDB-style query API. Reactive live queries.                                      |
+| 🔄 **CRDT Sync**       | Yjs-powered conflict-free sync. Syncs and merges without servers. Works across browser tabs, devices, and peers. |
+| 🕸️ **P2P Network**     | WebRTC mesh via `simple-peer`. Minimal signaling server (only for initial handshake).                            |
+| 🔐 **Keychain Auth**   | Ed25519 keypair identity. Sign-in is `generateKey()`. No email, no OAuth, no passwords.                          |
+| 📦 **Modular SDK**     | Tree-shakeable. Use only what you need. Works with React, Vue, Svelte, or vanilla JS.                            |
+| ⚡ **Zero Config CLI** | `npx zerithdb init` bootstraps a full project in seconds.                                                        |
 
 ---
 
