@@ -13,7 +13,8 @@ import { wrapIDBOperation } from "./internal/wrap-idb-operation.js";
 import type { BackupExportOptions, BackupSnapshot } from "./backup.js";
 import { GraphClient } from "./graph-client.js";
 import type { GraphNode, GraphEdge } from "zerithdb-core";
-import { generateKeyBetween, rebalanceKeys } from "zerithdb-utils";
+import { uploadLargeFiles, downloadLargeFiles, DefaultIpfsProvider } from "./ipfs.js";
+
 /**
  * A handle to a single named collection within the ZerithDB local database.
  * All operations are async and backed by IndexedDB.
@@ -22,7 +23,8 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
   constructor(
     private readonly table: Table<Document<T>>,
     private readonly collectionName: string,
-    private readonly auth?: any
+    private readonly config?: ZerithDBConfig,
+    private readonly dexie?: ZerithDBDexie
   ) {}
 
   private async checkBiometric(operationDescription: string): Promise<void> {
@@ -103,15 +105,62 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
    * Insert a new document into the collection.
    * Automatically assigns `_id`, `_createdAt`, and `_updatedAt`.
    */
+  private async restoreIpfsReferences(doc: Document<T>): Promise<Document<T>> {
+    if (!this.config?.ipfs?.enabled) return doc;
+
+    const cacheTable = this.dexie?.ensureIpfsCacheTable();
+    const cacheGet = async (cid: string) => {
+      if (!cacheTable) return undefined;
+      return Dexie.ignoreTransaction(async () => {
+        const entry = await cacheTable.get(cid);
+        return entry?.data;
+      });
+    };
+    const cacheSet = async (cid: string, data: Blob | Uint8Array) => {
+      if (!cacheTable) return;
+      await Dexie.ignoreTransaction(async () => {
+        await cacheTable.put({ cid, data, cachedAt: Date.now() });
+      });
+    };
+
+    const provider =
+      this.config.ipfs.provider ??
+      new DefaultIpfsProvider(this.config.ipfs.apiUrl, this.config.ipfs.gatewayUrl);
+    const fetchFn = async (cid: string): Promise<Blob> => {
+      if (!this.dexie) {
+        return provider.fetch(cid);
+      }
+      let active = this.dexie.activeFetches.get(cid);
+      if (!active) {
+        active = provider.fetch(cid).finally(() => {
+          this.dexie?.activeFetches.delete(cid);
+        });
+        this.dexie.activeFetches.set(cid, active);
+      }
+      return active;
+    };
+
+    return downloadLargeFiles(doc, fetchFn, cacheGet, cacheSet);
+  }
+
   async insert(document: T): Promise<InsertResult> {
     if (document === null || document === undefined) {
       throw new ZerithDBError(ErrorCode.DB_WRITE_FAILED, "Document cannot be null or undefined");
     }
-    await this.checkBiometric("Insert Document");
+    let docToInsert = { ...document };
+    if (this.config?.ipfs?.enabled) {
+      const sizeThreshold = this.config.ipfs.sizeThreshold ?? 0;
+      const provider =
+        this.config.ipfs.provider ??
+        new DefaultIpfsProvider(this.config.ipfs.apiUrl, this.config.ipfs.gatewayUrl);
+      const uploadFn = (data: Blob | Uint8Array) => provider.upload(data);
+      docToInsert = await uploadLargeFiles(docToInsert, sizeThreshold, uploadFn);
+    }
+
     const now = Date.now();
     const id = uuidv7();
     const doc: Document<T> = {
-      ...document,
+      ...docToInsert,
       _id: id,
       _createdAt: now,
       _updatedAt: now,
@@ -143,8 +192,23 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
         );
       }
     }
+
+    const processedDocs: T[] = [];
+    if (this.config?.ipfs?.enabled) {
+      const sizeThreshold = this.config.ipfs.sizeThreshold ?? 0;
+      const provider =
+        this.config.ipfs.provider ??
+        new DefaultIpfsProvider(this.config.ipfs.apiUrl, this.config.ipfs.gatewayUrl);
+      const uploadFn = (data: Blob | Uint8Array) => provider.upload(data);
+      for (const doc of documents) {
+        processedDocs.push(await uploadLargeFiles(doc, sizeThreshold, uploadFn));
+      }
+    } else {
+      processedDocs.push(...documents);
+    }
+
     const now = Date.now();
-    const docs = documents.map((doc) => ({
+    const docs = processedDocs.map((doc) => ({
       ...doc,
       _id: uuidv7(),
       _createdAt: now,
@@ -171,8 +235,12 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
    * const high = await todos.find({ priority: { $gte: 3 } });
    * ```
    */
-  async find(filter: QueryFilter<T> = {}, options: QueryOptions<T> = {}): Promise<Document<T>[]> {
-    return wrapIDBOperation(
+  async find(
+    filter: QueryFilter<T> = {},
+    options: QueryOptions = {},
+    restoreIpfs = true
+  ): Promise<Document<T>[]> {
+    const results = await wrapIDBOperation(
       ErrorCode.DB_READ_FAILED,
       `Failed to query collection "${this.collectionName}"`,
       async () => {
@@ -212,17 +280,29 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
         return results.slice(skip, skip + limit);
       }
     );
+
+    if (restoreIpfs && this.config?.ipfs?.enabled) {
+      const restoredResults: Document<T>[] = [];
+      for (const doc of results) {
+        restoredResults.push(await this.restoreIpfsReferences(doc));
+      }
+      return restoredResults;
+    }
+
+    return results;
   }
 
   /**
    * Find a single document by its `_id`.
    */
   async findById(id: string): Promise<Document<T> | undefined> {
-    return wrapIDBOperation(
+    const doc = await wrapIDBOperation(
       ErrorCode.DB_READ_FAILED,
       `Failed to get document "${id}" from "${this.collectionName}"`,
       () => this.table.get(id)
     );
+    if (!doc) return undefined;
+    return this.restoreIpfsReferences(doc);
   }
 
   /**
@@ -246,9 +326,26 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
       ErrorCode.DB_WRITE_FAILED,
       `Failed to update documents in "${this.collectionName}"`,
       async () => {
-        const matches = await this.find(filter);
+        // Query RAW documents (with IPFS references untouched) so we don't write restored Blobs back to IndexedDB!
+        const matches = await this.find(filter, {}, false);
+
+        let processedSpec = { ...spec };
+        if (this.config?.ipfs?.enabled && processedSpec.$set) {
+          const sizeThreshold = this.config.ipfs.sizeThreshold ?? 0;
+          const provider =
+            this.config.ipfs.provider ??
+            new DefaultIpfsProvider(this.config.ipfs.apiUrl, this.config.ipfs.gatewayUrl);
+          const uploadFn = (data: Blob | Uint8Array) => provider.upload(data);
+          processedSpec = {
+            ...processedSpec,
+            $set: await uploadLargeFiles(processedSpec.$set, sizeThreshold, uploadFn),
+          };
+        }
+
         const now = Date.now();
-        await this.table.bulkPut(matches.map((doc) => this.applyUpdateSpec(doc, spec, now)));
+        await this.table.bulkPut(
+          matches.map((doc) => this.applyUpdateSpec(doc, processedSpec, now))
+        );
         return matches.length;
       }
     );
@@ -264,7 +361,8 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
       ErrorCode.DB_DELETE_FAILED,
       `Failed to delete documents from "${this.collectionName}"`,
       async () => {
-        const matches = await this.find(filter);
+        // Use raw find to avoid loading from IPFS during delete query
+        const matches = await this.find(filter, {}, false);
         await this.table.bulkDelete(matches.map((d) => d._id));
         return matches.length;
       }
@@ -519,11 +617,8 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
           return false;
         }
 
-        const regex = conditions.$regex;
-
-        if (!(regex instanceof RegExp)) {
-          return false;
-        }
+        const regex =
+          conditions.$regex instanceof RegExp ? conditions.$regex : new RegExp(conditions.$regex);
 
         regex.lastIndex = 0;
 
@@ -590,9 +685,28 @@ class ZerithDBDexie extends Dexie {
   private readonly tableMap = new Map<string, Table>();
   private _currentSchema: Record<string, string> = {};
   private _pendingVersion = 0;
+  readonly activeFetches = new Map<string, Promise<Blob>>();
 
   constructor(appId: string) {
     super(`zerithdb_${appId}`);
+  }
+
+  ensureIpfsCacheTable(): Table {
+    const key = "__ipfs_cache";
+    if (!this.tableMap.has(key)) {
+      this._currentSchema[key] = "cid, cachedAt";
+
+      const nextVersion = Math.max(this.verno, this._pendingVersion) + 1;
+      this._pendingVersion = nextVersion;
+
+      if (this.isOpen()) {
+        this.close();
+      }
+
+      this.version(nextVersion).stores(this._currentSchema);
+      this.tableMap.set(key, this.table(key));
+    }
+    return this.table(key);
   }
 
   /**
@@ -617,8 +731,7 @@ class ZerithDBDexie extends Dexie {
       this.version(nextVersion).stores(this._currentSchema);
       this.tableMap.set(name, this.table(name));
     }
-    // biome-ignore lint: map guarantees this is defined
-    return this.tableMap.get(name)!;
+    return this.table(name);
   }
 
   ensureGraphTables(graphName: string): { nodesTable: Table; edgesTable: Table } {
@@ -660,12 +773,12 @@ export class DbClient {
 
   private readonly graphs = new Map<string, GraphClient<any>>();
 
-  constructor(
-    config: ZerithDBConfig,
-    private readonly auth?: any
-  ) {
+  constructor(private readonly config: ZerithDBConfig) {
     this.appId = config.appId;
     this.dexie = new ZerithDBDexie(config.appId);
+    if (config.ipfs?.enabled) {
+      this.dexie.ensureIpfsCacheTable();
+    }
   }
 
   collection<T extends Record<string, any>>(name: string): CollectionClient<T> {
@@ -679,10 +792,20 @@ export class DbClient {
       const table = this.dexie.ensureCollection(name);
       this.collections.set(
         name,
-        new CollectionClient<T>(table as Table<Document<T>>, name, this.auth)
+        new CollectionClient<T>(table as Table<Document<T>>, name, this.config, this.dexie)
       );
     }
     return this.collections.get(name) as CollectionClient<T>;
+  }
+
+  /**
+   * Clears the local IPFS/Filecoin binary cache.
+   */
+  async clearIpfsCache(): Promise<void> {
+    if (this.config.ipfs?.enabled) {
+      const table = this.dexie.ensureIpfsCacheTable();
+      await Dexie.ignoreTransaction(() => table.clear());
+    }
   }
 
   graph<T extends Record<string, any> = Record<string, any>>(name: string): GraphClient<T> {
