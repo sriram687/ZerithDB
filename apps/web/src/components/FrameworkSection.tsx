@@ -142,7 +142,7 @@ export default function FrameworkSection() {
               }}
               className={`
                 group relative flex flex-col items-center justify-center p-6
-                bg-white dark:bg-zinc-900 border border-gray-100/80 dark:border-zinc-800/80
+                bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800
                 rounded-[1.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] 
                 transition-all duration-500 ease-out
                 w-full aspect-square
@@ -168,7 +168,7 @@ export default function FrameworkSection() {
                 >
                   {fw.icon}
                 </div>
-                <span className="text-lg font-bold text-foreground tracking-tight transition-colors duration-300">
+                <span className="text-lg font-semibold text-gray-900 dark:text-white tracking-tight transition-colors duration-300">
                   {fw.name}
                 </span>
               </motion.div>
