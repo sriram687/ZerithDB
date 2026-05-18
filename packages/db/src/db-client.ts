@@ -387,9 +387,8 @@ export class CollectionClient<T extends Record<string, any> = Record<string, any
       if ("$regex" in conditions) {
         if (typeof fieldValue !== "string") return false;
         const regex =
-          conditions.$regex instanceof RegExp
-            ? conditions.$regex
-            : new RegExp(conditions.$regex);
+          conditions.$regex instanceof RegExp ? conditions.$regex : new RegExp(conditions.$regex);
+
         regex.lastIndex = 0;
         if (!regex.test(fieldValue)) return false;
       }
@@ -455,6 +454,13 @@ class ZerithDBDexie extends Dexie {
     super(`zerithdb_${appId}`);
   }
 
+  /**
+   * Ensure a named collection exists, creating it via a Dexie version
+   * upgrade if it has not been registered yet.
+   *
+   * @param name - The collection name to create or retrieve
+   * @returns The Dexie {@link Table} handle for the collection
+   */
   ensureCollection(name: string): Table {
     if (!this.tableMap.has(name)) {
       this._currentSchema[name] = "_id, _createdAt, _updatedAt";
@@ -559,11 +565,7 @@ export class DbClient {
       const { nodesTable, edgesTable } = this.dexie.ensureGraphTables(name);
       this.graphs.set(
         name,
-        new GraphClient<T>(
-          nodesTable as Table<GraphNode<T>>,
-          edgesTable as Table<GraphEdge>,
-          name
-        )
+        new GraphClient<T>(nodesTable as Table<GraphNode<T>>, edgesTable as Table<GraphEdge>, name)
       );
     }
     return this.graphs.get(name) as GraphClient<T>;

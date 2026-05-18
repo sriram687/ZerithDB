@@ -47,3 +47,23 @@ export type {
   ActiveSpeakerState,
   VideoParticipantState,
 } from "./types/sync.js";
+
+export type {
+  GraphNode,
+  GraphEdge,
+  GraphNodeId,
+  EdgeLabel,
+  GraphTraversalResult,
+} from "./types/graph.js";
+
+export {
+  PeerIdSchema,
+  SyncUpdateMessageSchema,
+  AwarenessMessageSchema,
+  PingMessageSchema,
+  PongMessageSchema,
+  PeerDataMessageSchema,
+  IncomingPeerDataMessageSchema,
+} from "./schemas/messages.js";
+
+export type { PeerDataMessage, IncomingPeerDataMessage } from "./schemas/messages.js";

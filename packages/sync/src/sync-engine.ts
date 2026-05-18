@@ -1,7 +1,7 @@
 import * as Y from "yjs";
 import { IndexeddbPersistence } from "y-indexeddb";
-import type { ZerithDBConfig, SyncState, SyncPlugin } from "zerithdb-core";
-import { EventEmitter, ZerithDBError, ErrorCode } from "zerithdb-core";
+import type { ZerithDBConfig, SyncState, SyncPlugin, IncomingPeerDataMessage } from "zerithdb-core";
+import { EventEmitter } from "zerithdb-core";
 import type { DbClient } from "zerithdb-db";
 import type { NetworkManager } from "zerithdb-network";
 import type { SyncProtocol } from "zerithdb-core";
@@ -284,67 +284,7 @@ doc.on("update", (update: Uint8Array, origin: unknown) => {
     this.pendingUpdates.clear();
   }
 
-  // [UCAN] Send our own capability to a newly connected peer
-  private async sendCapability(peerId: string): Promise<void> {
-    const rootCapability: Capability = {
-      resource: `zerithdb://${this.config.appId}/*`,
-      actions: ["read", "write", "create", "delete", "sync"],
-    };
-    const ucan = await this.auth.delegate(peerId, [rootCapability], { expiresIn: 86400 });
-    this.network.sendTo(peerId, {
-      type: "capability",
-      payload: JSON.stringify(ucan),
-    });
-  }
-
-  // [UCAN] Handle an incoming capability message
-  private async handleCapability(fromPeer: string, serializedUcan: string): Promise<boolean> {
-    let ucan: UCAN;
-    try {
-      ucan = JSON.parse(serializedUcan);
-    } catch {
-      return false;
-    }
-
-    const isValid = await this.auth.verifyUCAN(ucan, undefined, this.appOwnerDid);
-    if (!isValid) {
-      console.warn(`Invalid capability from peer ${fromPeer}`);
-      return false;
-    }
-
-    this.peerCapabilities.set(fromPeer, {
-      ucan,
-      expiresAt: ucan.exp * 1000,
-    });
-    return true;
-  }
-
-  // [UCAN] Check if a peer has a required permission on a collection
-  private async checkRemotePermission(
-    peerId: string,
-    collectionName: string,
-    action: "read" | "write" | "create" | "delete" | "sync"
-  ): Promise<boolean> {
-    const entry = this.peerCapabilities.get(peerId);
-    if (!entry) return false;
-    if (Date.now() > entry.expiresAt) {
-      this.peerCapabilities.delete(peerId);
-      return false;
-    }
-
-    const capabilities = this.auth.getCapabilities(entry.ucan);
-    const resource = `zerithdb://${this.config.appId}/${collectionName}`;
-    return capabilities.some(cap => allowsAction(cap, resource, action));
-  }
-
-  private onPeerUpdate(msg: { type: string; payload: Uint8Array | string; from: string }): void {
-    // [UCAN] Handle capability exchange
-    if (msg.type === "capability") {
-      const payloadStr = typeof msg.payload === "string" ? msg.payload : new TextDecoder().decode(msg.payload);
-      void this.handleCapability(msg.from, payloadStr);
-      return;
-    }
-
+  private onPeerUpdate(msg: IncomingPeerDataMessage): void {
     if (msg.type === "sync-upgrade-offer") {
       const payloadStr =
         typeof msg.payload === "string" ? msg.payload : new TextDecoder().decode(msg.payload);
@@ -368,7 +308,14 @@ doc.on("update", (update: Uint8Array, origin: unknown) => {
 
     if (msg.type !== "sync-update") return;
 
-    const payload = typeof msg.payload === "string" ? base64ToBytes(msg.payload) : msg.payload;
+    let payload: Uint8Array;
+
+    try {
+      payload = base64ToBytes(msg.payload);
+    } catch {
+      return;
+    }
+
     const decoded = this.decodeMessage(payload);
     if (decoded === null) return;
 
@@ -510,7 +457,7 @@ doc.on("update", (update: Uint8Array, origin: unknown) => {
     const pending = await this.outbox.getPending();
     for (const mutation of pending) {
       this.network.broadcast({
-        type: mutation.type,
+        type: "sync-update",
         payload: this.encodeMessage(mutation.collection, mutation.payload),
       });
       await this.outbox.acknowledge(mutation.id);

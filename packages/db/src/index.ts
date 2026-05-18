@@ -11,11 +11,3 @@ export type {
   LocalCloudBackupOptions,
 } from "./backup.js";
 export { GraphClient, GraphTraversal } from "./graph-client.js";
-export {
-  DefaultIpfsProvider,
-  MockIpfsProvider,
-  isIpfsReference,
-  uploadLargeFiles,
-  downloadLargeFiles,
-} from "./ipfs.js";
-export type { IpfsReference } from "./ipfs.js";
