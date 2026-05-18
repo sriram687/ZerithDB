@@ -494,6 +494,9 @@ export class DbClient extends EventEmitter<{ "mutation": { collection: string } 
     );
   }
   async dispose(): Promise<void> {
+    // Remove all EventEmitter listeners before closing to prevent memory leaks
+    // from dangling references to this DbClient instance after disposal.
+    this.removeAllListeners();
     this.dexie.close();
   }
 }
