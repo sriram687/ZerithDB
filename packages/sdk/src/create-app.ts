@@ -1,6 +1,6 @@
 import { Logger } from "zerithdb-core";
-import type { Document, Identity, QueryFilter, SyncState, ZerithDBConfig } from "zerithdb-core";
-export type { Document, Identity, QueryFilter, SyncState, ZerithDBConfig };
+import type { Document, Identity, QueryFilter, SyncState, ZerithDBConfig, InsertResult, PeerInfo, UpdateSpec } from "zerithdb-core";
+export type { Document, Identity, QueryFilter, SyncState, ZerithDBConfig, InsertResult, PeerInfo, UpdateSpec };
 import { MemoryCollector, estimateStorageBytes } from "zerithdb-devtools";
 import { ZerithDBError, ErrorCode } from "zerithdb-core";
 import { DbClient, CollectionClient } from "zerithdb-db";
