@@ -16,8 +16,8 @@
   },
   "sideEffects": false,
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --treeshake",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "build": "node init && tsup src/index.ts --format esm,cjs --dts --treeshake",
+    "dev": "node init && tsup src/index.ts --format esm,cjs --dts --watch",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"
   },
