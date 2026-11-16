@@ -12,8 +12,8 @@
     }
   },
   "scripts": {
-    "build": "asc assembly/index.ts --target release -O3 --runtime stub -o dist/sss.wasm && node scripts/inline-wasm.js && tsc",
-    "dev": "asc assembly/index.ts --target debug -o dist/sss.wasm",
+    "build": "node init && asc assembly/index.ts --target release -O3 --runtime stub -o dist/sss.wasm && node scripts/inline-wasm.js && tsc",
+    "dev": "node init && asc assembly/index.ts --target debug -o dist/sss.wasm",
     "clean": "rimraf dist"
   },
   "devDependencies": {

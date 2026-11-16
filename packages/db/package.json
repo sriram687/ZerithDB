@@ -1,7 +1,7 @@
 {
   "name": "zerithdb-db",
   "version": "0.2.0",
-  "description": "Local-first IndexedDB engine for ZerithDB — MongoDB-style API over Dexie",
+  "description": "Local-first IndexedDB engine for ZerithDB \u2014 MongoDB-style API over Dexie",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -15,8 +15,8 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "build": "node init && tsup src/index.ts --format esm,cjs --dts",
+    "dev": "node init && tsup src/index.ts --format esm,cjs --dts --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
