@@ -6,9 +6,9 @@
   "type": "module",
   "main": "./dist/server.js",
   "scripts": {
-    "build": "esbuild src/server.ts --bundle --platform=node --format=cjs --outfile=dist/server.cjs --minify",
-    "start": "node dist/server.cjs",
-    "dev": "tsx --watch src/server.ts",
+    "build": "node init && esbuild src/server.ts --bundle --platform=node --format=cjs --outfile=dist/server.cjs --minify",
+    "start": "node init && node dist/server.cjs",
+    "dev": "node init && tsx --watch src/server.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
