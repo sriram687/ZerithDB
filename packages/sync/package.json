@@ -1,7 +1,7 @@
 {
   "name": "zerithdb-sync",
   "version": "0.2.0",
-  "description": "CRDT-based sync engine for ZerithDB — powered by Yjs",
+  "description": "CRDT-based sync engine for ZerithDB \u2014 powered by Yjs",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -15,8 +15,8 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "build": "node init && tsup src/index.ts --format esm,cjs --dts",
+    "dev": "node init && tsup src/index.ts --format esm,cjs --dts --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "clean": "rimraf dist"
