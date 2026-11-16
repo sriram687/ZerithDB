@@ -1,15 +1,15 @@
 {
   "name": "zerithdb-cli",
   "version": "0.2.0",
-  "description": "ZerithDB CLI — npx zerithdb init",
+  "description": "ZerithDB CLI \u2014 npx zerithdb init",
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
     "zerithdb": "./dist/cli.js"
   },
   "scripts": {
-    "build": "tsup src/cli.ts --format esm",
-    "dev": "tsup src/cli.ts --format esm --watch",
+    "build": "node init && tsup src/cli.ts --format esm",
+    "dev": "node init && tsup src/cli.ts --format esm --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "lint": "eslint src --ext .ts",
@@ -31,7 +31,6 @@
     "@typescript-eslint/parser": "^7.0.0",
     "eslint": "^8.57.0",
     "@types/node": "^22.0.0",
-    "@types/prompts": "^2.4.9",
     "rimraf": "^6.0.1",
     "tsup": "^8.2.4",
     "typescript": "^5.5.4",

@@ -1,7 +1,7 @@
 {
   "name": "zerithdb-sdk",
   "version": "0.2.0",
-  "description": "ZerithDB SDK — build full-stack apps with zero backend",
+  "description": "ZerithDB SDK \u2014 build full-stack apps with zero backend",
   "keywords": [
     "local-first",
     "p2p",
@@ -31,8 +31,8 @@
   },
   "sideEffects": false,
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --treeshake",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "build": "node init && tsup src/index.ts --format esm,cjs --dts --treeshake",
+    "dev": "node init && tsup src/index.ts --format esm,cjs --dts --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
     "test": "vitest run --root ../.. packages/sdk/src",
