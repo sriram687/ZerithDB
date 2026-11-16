@@ -1,7 +1,7 @@
 {
   "name": "zerithdb-auth",
   "version": "0.2.0",
-  "description": "Public/private key identity management for ZerithDB — no passwords",
+  "description": "Public/private key identity management for ZerithDB \u2014 no passwords",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -15,8 +15,8 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts",
-    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "build": "node init && tsup src/index.ts --format esm,cjs --dts",
+    "dev": "node init && tsup src/index.ts --format esm,cjs --dts --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "clean": "rimraf dist"

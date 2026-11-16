@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build": "node init && tsup src/index.ts --format cjs,esm --dts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
